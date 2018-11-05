@@ -23,7 +23,7 @@ setInterval(() => {
   docSet.setDoc('example', doc)
 }, 3000)
 
-// This function calls every time a client connects to the server socket
+// This function is called every time a client connects to the server socket
 function handler(socket) {
   console.log(`[${socket.remoteAddress}:${socket.remotePort}] connected`)
   const connection = new Connection(docSet, socket)
