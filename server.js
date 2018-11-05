@@ -38,6 +38,7 @@ function handler(socket) {
 
   socket.on('close', (data) => {
     console.log(`[${socket.remoteAddress}:${socket.remotePort}] connection closed`)
+    connection.close()
   })
 
   socket.on('error', (err) => {

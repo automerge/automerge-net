@@ -26,12 +26,19 @@ class Connection {
   }
 
   sendMsg (msg) {
+    if (!this.socket) return
     //console.log('Sending:', msg)
     const data = Buffer.from(JSON.stringify(msg), 'utf8')
     const header = Buffer.alloc(4)
     header.writeInt32BE(data.length, 0)
     this.socket.write(header)
     this.socket.write(data)
+  }
+
+  close () {
+    if (!this.socket) return
+    this.socket.end()
+    this.socket = null
   }
 }
 
