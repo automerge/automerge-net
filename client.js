@@ -1,47 +1,39 @@
-const Automerge = require('automerge')
-const Connection = require('./connection')
+const { Connection } = require('./Connection')
 const net = require('net')
-const HOST = '127.0.0.1'
-const PORT = 9876
-const docSet = new Automerge.DocSet()
 
-// Print out the document whenever it changes
-docSet.registerHandler((docId, doc) => {
-  console.log(`[${docId}] ${JSON.stringify(doc)}`)
-})
+class Client {
+  constructor(docSet, port, host) {
+    this.docSet = docSet
+    this.host = host
+    this.port = port
+    this.socket = new net.Socket()
+  }
 
-// Make a change to the document every 3 seconds
-setInterval(() => {
-  let doc = docSet.getDoc('example')
-  if (doc) {
-    doc = Automerge.change(doc, doc => {
-      doc.clientNum = (doc.clientNum || 0) + 1
+  connect() {
+    // Connect to a TCP port
+    this.socket.connect(
+      this.port,
+      this.host,
+      () => (this.connection = new Connection(this.docSet, this.socket))
+    )
+
+    // Receiving data from the server
+    this.socket.on('data', data => {
+      // Coerce data to Buffer
+      if (!(data instanceof Buffer)) data = Buffer.from(data, 'utf8')
+      this.connection.receiveData(data)
     })
-    docSet.setDoc('example', doc)
+
+    // Server closed connection
+    this.socket.on('close', () => {
+      console.log(`CLIENT: server connection [${this.host}:${this.port}] closed`)
+    })
+
+    // Server error
+    this.socket.on('error', err => {
+      throw err
+    })
   }
-}, 3000)
+}
 
-const socket = new net.Socket()
-let connection
-
-// Connecting to a TCP port
-socket.connect(PORT, HOST, () => {
-  console.log(`[${HOST}:${PORT}] connected`)
-  connection = new Connection(docSet, socket)
-})
-
-// Receiving data from the server
-socket.on('data', (data) => {
-  if (!(data instanceof Buffer)) {
-    data = Buffer.from(data, 'utf8')
-  }
-  connection.receiveData(data)
-})
-
-socket.on('close', () => {
-  console.log(`[${HOST}:${PORT}] connection closed`)
-})
-
-socket.on('error', (err) => {
-  console.log(`[${socket.remoteAddress}:${socket.remotePort}] error: ${err}`)
-})
+exports.Client = Client
