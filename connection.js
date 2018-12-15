@@ -1,14 +1,14 @@
 const Automerge = require('automerge')
 
 class Connection {
-  constructor (docSet, socket) {
-    this.automerge = new Automerge.Connection(docSet, msg => this.sendMsg(msg))
+  constructor(docSet, socket) {
+    this.connection = new Automerge.Connection(docSet, msg => this.sendData(msg))
     this.socket = socket
     this.buffer = Buffer.alloc(0)
-    this.automerge.open()
+    this.connection.open()
   }
 
-  receiveData (data) {
+  receiveData(data) {
     this.buffer = Buffer.concat([this.buffer, data])
 
     // If there is enough data in the buffer, decode it into messages
@@ -20,14 +20,14 @@ class Connection {
 
       const msg = JSON.parse(this.buffer.toString('utf8', 4, msglen + 4))
       this.buffer = this.buffer.slice(msglen + 4)
-      //console.log('Received:', msg)
-      this.automerge.receiveMsg(msg)
+      // console.log('CONNECTION: received', msg)
+      this.connection.receiveMsg(msg)
     }
   }
 
-  sendMsg (msg) {
+  sendData(msg) {
     if (!this.socket) return
-    //console.log('Sending:', msg)
+    // console.log('CONNECTION: sending', data)
     const data = Buffer.from(JSON.stringify(msg), 'utf8')
     const header = Buffer.alloc(4)
     header.writeInt32BE(data.length, 0)
@@ -35,11 +35,11 @@ class Connection {
     this.socket.write(data)
   }
 
-  close () {
+  close() {
     if (!this.socket) return
     this.socket.end()
     this.socket = null
   }
 }
 
-module.exports = Connection
+exports.Connection = Connection

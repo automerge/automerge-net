@@ -1,7 +1,14 @@
 {
+  "license": "MIT",
+  "scripts": {
+    "start": "run-p start:server start:client",
+    "start:client": "node demo/client",
+    "start:server": "node demo/server"
+  },
   "dependencies": {
     "automerge": "0.9.1"
   },
   "devDependencies": {
+    "npm-run-all": "4.1.5"
   }
 }
